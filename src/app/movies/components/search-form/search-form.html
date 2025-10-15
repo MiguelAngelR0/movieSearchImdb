@@ -25,14 +25,25 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="w-full">
         <label class="block text-sm font-medium text-gray-700 mb-2">Año desde</label>
-        <input pInputText type="number" formControlName="startYearFrom" placeholder="Ej: 1990" class="w-full" />
+        <p-datepicker formControlName="startYearFrom" view="year" dateFormat="yy" [minDate]="minYear"
+          [maxDate]="maxYear" showIcon="true" [style]="{ width: '100%' }"></p-datepicker>
+
+        @if(searchForm.hasError('yearRangeInvalid') && (searchForm.get('startYearFrom')?.touched ||
+        searchForm.get('startYearTo')?.touched)){
+        <div class="text-red-600 text-sm mt-1">
+          El año "desde" no puede ser mayor que el año "hasta".
+        </div>
+        }
+
       </div>
 
       <div class="w-full">
         <label class="block text-sm font-medium text-gray-700 mb-2">Año hasta</label>
-        <input pInputText type="number" formControlName="startYearTo" placeholder="Ej: 2024" class="w-full" />
+        <p-datepicker formControlName="startYearTo" view="year" dateFormat="yy" [minDate]="minYear" [maxDate]="maxYear"
+          showIcon="true" [style]="{ width: '100%' }"></p-datepicker>
       </div>
     </div>
+
 
     <!-- Fila 3: Rating -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

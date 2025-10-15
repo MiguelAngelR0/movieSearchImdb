@@ -37,11 +37,11 @@ export interface ImdbSearchParams {
   averageRatingTo?: number;
   numVotesFrom?: number;
   numVotesTo?: number;
-  rows?: number; // máx 100
+  rows?: number;
   startYearFrom?: number;
   startYearTo?: number;
-  countriesOfOrigin?: string; // ISO 3166-1 alpha-2
-  spokenLanguages?: string; // ISO 639-1
+  countriesOfOrigin?: string;
+  spokenLanguages?: string;
   sortOrder?: ImdbSortOrder;
   sortField?: ImdbSortField;
   cursorMark?: string;

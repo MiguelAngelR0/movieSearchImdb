@@ -1,0 +1,12 @@
+<div class="flex justify-center gap-4 m-4">
+  @for (cursor of cursorHistory(); track i; let i = $index) {
+  <p-button (click)="goToPage(i + 1)" [rounded]="true">
+    {{ i + 1 }}
+  </p-button>
+  }
+
+  @if (hasNextPage()) {
+  <p-button icon="pi pi-angle-double-right" [rounded]="true" (click)="loadNextPage.emit()"
+    [loading]="isLoadingNextPage()" />
+  }
+</div>

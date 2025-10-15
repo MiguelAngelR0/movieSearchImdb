@@ -1,20 +1,25 @@
-import { Component, inject, signal, WritableSignal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop'
+import { catchError, of, tap } from 'rxjs';
+
+import { Imdb } from '../../services/imdb';
+import { Pagination } from "../../components/pagination/pagination";
+import { SortButtons } from "../../components/sort-buttons/sort-buttons";
+import { Loading } from "../../components/loading/loading";
+import { SearchForm } from "../../components/search-form/search-form";
+import { MovieList } from "../../components/movie-list/movie-list";
+import { Error } from "../../components/error/error";
 
 import { ImdbSearchParams, ImdbSortField, ImdbSortOrder } from '../../interfaces/imdbSearchParams';
-import { Imdb } from '../../services/imdb';
-import { catchError, of } from 'rxjs';
 import { ImdbSearchResponse } from '../../interfaces/imdbResponse';
-import { MovieList } from "../../components/movie-list/movie-list";
-import { SearchForm } from "../../components/search-form/search-form";
-import { SortButtons } from "../../components/sort-buttons/sort-buttons";
-import { ProgressSpinner } from 'primeng/progressspinner';
+
 import { ButtonModule } from 'primeng/button';
+
 
 
 @Component({
   selector: 'app-landing',
-  imports: [MovieList, SearchForm, SortButtons, ProgressSpinner, ButtonModule],
+  imports: [MovieList, SearchForm, SortButtons, ButtonModule, Pagination, Loading, Error],
   templateUrl: './landing.html',
   styles: `
 
@@ -36,17 +41,19 @@ import { ButtonModule } from 'primeng/button';
 export default class Landing {
   imdb = inject(Imdb);
 
-  /** Historial de cursores por página */
   cursorHistory = signal<string[]>(['*']);
 
-  /** Parámetros actuales de búsqueda */
+  lastRequestedCursor = signal<string | null>(null);
+  isLoadingNextPage = signal(false);
+  isLastPage = signal(false);
+
   searchParams = signal<ImdbSearchParams>({
     rows: 12,
     sortField: 'averageRating',
-    sortOrder: 'ASC'
+    sortOrder: 'ASC',
+    type: 'movie'
   });
 
-  /** Recurso reactivo de películas */
   movieResource = rxResource({
     params: () => this.searchParams(),
     stream: ({ params }) => {
@@ -54,16 +61,53 @@ export default class Landing {
         return of({ results: [], numFound: 0 } as ImdbSearchResponse);
       }
 
+      this.isLoadingNextPage.set(true);
+
       return this.imdb.searchMovies(params).pipe(
+        tap((resp: ImdbSearchResponse) => {
+
+          this.isLoadingNextPage.set(false);
+
+          const reqCursor = this.lastRequestedCursor();
+
+          const noResults = !resp.results?.length;
+
+          const nextCursor = resp.nextCursorMark;
+          const currentHistory = this.cursorHistory();
+
+
+
+          if (reqCursor && !currentHistory.includes(reqCursor)) {
+
+            if (!noResults || (nextCursor && nextCursor !== reqCursor)) {
+              this.cursorHistory.update(h => [...h, reqCursor]);
+            }
+          }
+
+          if (!nextCursor || noResults || (reqCursor && nextCursor === reqCursor)) {
+            this.isLastPage.set(true);
+          } else {
+            this.isLastPage.set(false);
+          }
+
+
+          this.lastRequestedCursor.set(null);
+        }),
         catchError((error) => {
-          const msg = error.error?.message || error.message || 'Error al cargar películas';
-          throw new Error(msg);
+          this.isLoadingNextPage.set(false);
+          throw error;
         })
       );
     }
   });
 
-  /** Cambiar ordenación */
+  onSearch(params: ImdbSearchParams) {
+    this.searchParams.update(
+      p => ({ ...p, ...params, cursorMark: undefined })
+    );
+    this.cursorHistory.set(['*']);
+  }
+
   onSortChange(event: { sortField: ImdbSortField; sortOrder: ImdbSortOrder }) {
     this.searchParams.update(p => ({
       ...p,
@@ -74,17 +118,26 @@ export default class Landing {
     this.cursorHistory.set(['*']);
   }
 
-  /** Cargar siguiente página y guardar el cursor */
+
+
   loadNextPage() {
     const response = this.movieResource.value();
     const nextCursor = response?.nextCursorMark;
-    if (!nextCursor) return;
+    if (!nextCursor) {
+      this.isLastPage.set(true);
+      return;
+    }
 
-    this.cursorHistory.update(h => [...h, nextCursor]);
+    if (this.lastRequestedCursor() === nextCursor) return;
+
+    this.lastRequestedCursor.set(nextCursor);
+
     this.searchParams.update(p => ({ ...p, cursorMark: nextCursor }));
+
+    this.isLoadingNextPage.set(true);
   }
 
-  /** Ir a una página ya cargada */
+
   goToPage(pageNumber: number) {
     const history = this.cursorHistory();
     const cursor = history[pageNumber - 1];
@@ -94,19 +147,10 @@ export default class Landing {
       ...p,
       cursorMark: cursor === '*' ? undefined : cursor
     }));
-  }
-
-  /** Nueva búsqueda desde formulario */
-  onSearch(params: ImdbSearchParams) {
-    this.searchParams.update(p => ({
-      ...p,
-      ...params,
-      cursorMark: undefined
-    }));
-    this.cursorHistory.set(['*']);
+    this.isLastPage.set(false);
   }
 
   hasNextPage(): boolean {
-    return !!this.movieResource.value()?.nextCursorMark;
+    return !this.isLastPage() && !this.isLoadingNextPage();
   }
 }

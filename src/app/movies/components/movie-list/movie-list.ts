@@ -1,5 +1,5 @@
 import { Component, input } from '@angular/core';
-import { ImdbSearchResponse } from '../../interfaces/imdbResponse';
+import { ImdbMovie } from '../../interfaces/imdbResponse';
 import { MovieCard } from "./movie-card/movie-card";
 
 @Component({
@@ -22,7 +22,7 @@ import { MovieCard } from "./movie-card/movie-card";
 })
 export class MovieList {
 
-  movies = input<any>();
+  movies = input<ImdbMovie[]>();
 
 
 

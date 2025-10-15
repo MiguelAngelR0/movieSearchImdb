@@ -17,7 +17,7 @@ export interface ImdbMovie {
 
 export interface ImdbSearchResponse {
   numFound?: number;
-  rows?: 25;
+  rows?: number;
   results: ImdbMovie[];
   nextCursorMark?: string;
 }

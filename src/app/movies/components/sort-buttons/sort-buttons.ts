@@ -18,7 +18,6 @@ export class SortButtons {
   currentSortOrder = input<ImdbSortOrder>();
 
   constructor() {
-    // Sincronizar el estado cuando cambia desde el padre
     effect(() => {
       const field = this.currentSortField();
       const order = this.currentSortOrder();
@@ -34,30 +33,24 @@ export class SortButtons {
   }
 
 
-  // Output para emitir cambios al componente padre
   sortChange = output<{ sortField: ImdbSortField; sortOrder: ImdbSortOrder }>();
 
   toggleSortOrder(field: ImdbSortField) {
     if (this.activeSort() === field) {
-      // Si ya está activo, cambiar el orden
       this.sortOrder.update(order => order === 'ASC' ? 'DESC' : 'ASC');
-      // Actualizar sortField también
+
       this.sortField.set(field);
     } else {
-      // Si es nuevo, activarlo con el orden por defecto
       this.activeSort.set(field);
       this.sortField.set(field);
 
       if (field === 'averageRating') {
         this.sortOrder.set('ASC');
-      } else if (field === 'numVotes') {
-        this.sortOrder.set('DESC');
       } else if (field === 'startYear') {
         this.sortOrder.set('DESC');
       }
     }
 
-    // Emitir el cambio al componente padre
     this.sortChange.emit({
       sortField: this.sortField(),
       sortOrder: this.sortOrder()
