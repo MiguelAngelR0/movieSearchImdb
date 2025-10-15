@@ -1,0 +1,65 @@
+<div class="wrapper">
+  @defer (on viewport) {
+  @if (movie(); as m) {
+  <div class="card fade-in">
+    <div class="poster">
+      <img [src]="m.primaryImage || 'assets/images/NotFoundImage.png'" [alt]="m.primaryTitle" loading="lazy" />
+    </div>
+
+    <div class="details">
+      <h1>{{ m.primaryTitle }}</h1>
+
+      <div class="flex justify-between items-center">
+        <h2>
+          <p class="text-sm text-gray-400">
+            @if (m.startYear) { {{ m.startYear }} }
+            @if (m.runtimeMinutes) { • {{ m.runtimeMinutes }} min }
+            @if (m.contentRating) { • {{ m.contentRating }} }
+            @if (m.isAdult) { • +18 } @else { • All Ages }
+          </p>
+        </h2>
+
+        <div class="rating flex items-center justify-center">
+          <i class="pi pi-star-fill text-yellow-500"></i>
+          <span>{{ m.averageRating }}</span>
+        </div>
+      </div>
+
+      <p class="desc">
+        {{ m.description ? (m.description | slice:0:250) + '...' : 'Sin descripción' }}
+      </p>
+
+      @if (m.genres?.length) {
+      <span class="tag">
+        @for (genre of m.genres; track genre) {
+        {{ genre }}@if (!$last) {, }
+        }
+      </span>
+      } @else {
+      <span>No genres</span>
+      }
+    </div>
+  </div>
+  } @else {
+  <!-- Skeleton mientras carga -->
+  <div class="card skeleton">
+    <p-skeleton width="100%" height="14rem"></p-skeleton>
+    <div class="p-2">
+      <p-skeleton width="10rem"></p-skeleton>
+      <p-skeleton width="8rem"></p-skeleton>
+      <p-skeleton width="6rem"></p-skeleton>
+    </div>
+  </div>
+  }
+  } @placeholder {
+  <!-- Se muestra antes de que el @defer entre en viewport -->
+  <div class="card skeleton">
+    <p-skeleton width="100%" height="14rem"></p-skeleton>
+    <div class="p-2">
+      <p-skeleton width="10rem"></p-skeleton>
+      <p-skeleton width="8rem"></p-skeleton>
+      <p-skeleton width="6rem"></p-skeleton>
+    </div>
+  </div>
+  }
+</div>

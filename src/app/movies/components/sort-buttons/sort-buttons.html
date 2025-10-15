@@ -1,0 +1,12 @@
+<button pButton type="button"
+  [icon]="isActiveSort('startYear') ? (sortOrder() === 'ASC' ? 'pi pi-sort-down' : 'pi pi-sort-up') : 'pi pi-calendar'"
+  (click)="toggleSortOrder('startYear')" [label]="'Fecha'" [class.p-button-outlined]="!isActiveSort('startYear')"
+  class="p-button-sm mr-5">
+</button>
+
+
+<button pButton type="button"
+  [icon]="isActiveSort('averageRating') ? (sortOrder() === 'ASC' ? 'pi pi-sort-down' : 'pi pi-sort-up') : 'pi pi-star'"
+  (click)="toggleSortOrder('averageRating')" [label]="'Valoración'"
+  [class.p-button-outlined]="!isActiveSort('averageRating')" class="p-button-sm">
+</button>

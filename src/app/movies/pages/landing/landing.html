@@ -1,0 +1,54 @@
+<div class="landing-page">
+
+
+  <!-- Controles de búsqueda -->
+  <!-- <div class="search-controls">
+    <input type="text" placeholder="Buscar película..." #searchInput (keyup.enter)="searchByTitle(searchInput.value)">
+    <button (click)="searchByTitle(searchInput.value)">Buscar</button>
+  </div> -->
+
+  <app-search-form (search)="onSearch($event)"></app-search-form>
+
+  <!-- Loading State -->
+  @if (movieResource.isLoading()) {
+  <div class="flex flex-col justify-center items-center p-8">
+    <p-progressSpinner strokeWidth="4" animationDuration="1s" class="w-20 h-20">
+    </p-progressSpinner>
+    <div class="text-lg mt-4">Cargando películas...</div>
+  </div>
+  }
+
+  <!-- Error State -->
+  @if (movieResource.error(); as error) {
+  <div class="error">
+    <h3>❌ Error al cargar películas</h3>
+    <p>{{ error.message }}</p>
+    <button (click)="movieResource.reload()">Reintentar</button>
+  </div>
+  } @else if (movieResource.value(); as response) {
+
+  <div class="flex justify-end items-center mb-4 gap-2">
+    <app-sort-buttons [currentSortField]="searchParams().sortField" [currentSortOrder]="searchParams().sortOrder"
+      (sortChange)="onSortChange($event)" />
+  </div>
+
+  <div class="results">
+    <p class="total">Total de resultados: {{ response.numFound }}</p>
+    <app-movie-list [movies]="response.results"></app-movie-list>
+  </div>
+
+  <div class="pagination flex gap-2 mt-4">
+    @for (cursor of cursorHistory(); track cursor; let i = $index) {
+    <button (click)="goToPage(i + 1)">
+      {{ i + 1 }}
+    </button>
+    }
+    @if (hasNextPage()) {
+    <button (click)="loadNextPage()">➡️ Cargar más</button>
+    }
+
+  </div>
+  }
+
+
+</div>
