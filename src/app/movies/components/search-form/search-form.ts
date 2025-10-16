@@ -47,7 +47,7 @@ export class SearchForm {
     'Thriller', 'War', 'Western'
   ];
 
-  sortFields: ImdbSortField[] = ['id', 'primaryTitle', 'averageRating', 'numVotes', 'startYear'];
+  sortFields: ImdbSortField[] = ['id', 'averageRating', 'startYear'];
   sortOrders: ImdbSortOrder[] = ['ASC', 'DESC'];
 
   constructor(private fb: FormBuilder) {

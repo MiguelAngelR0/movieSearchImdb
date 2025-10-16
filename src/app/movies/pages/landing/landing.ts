@@ -41,10 +41,13 @@ import { ButtonModule } from 'primeng/button';
 export default class Landing {
   imdb = inject(Imdb);
 
+  //Historial de cursores ya usados
   cursorHistory = signal<string[]>(['*']);
-
+  //Guarda el último cursor que se solicitó para evitar duplicar peticiones.
   lastRequestedCursor = signal<string | null>(null);
+  //Indica si se está cargando la siguiente página
   isLoadingNextPage = signal(false);
+  //Indica si se ha llegado a la última página
   isLastPage = signal(false);
 
   searchParams = signal<ImdbSearchParams>({
@@ -64,34 +67,10 @@ export default class Landing {
       this.isLoadingNextPage.set(true);
 
       return this.imdb.searchMovies(params).pipe(
-        tap((resp: ImdbSearchResponse) => {
 
+        tap(resp => {
           this.isLoadingNextPage.set(false);
-
-          const reqCursor = this.lastRequestedCursor();
-
-          const noResults = !resp.results?.length;
-
-          const nextCursor = resp.nextCursorMark;
-          const currentHistory = this.cursorHistory();
-
-
-
-          if (reqCursor && !currentHistory.includes(reqCursor)) {
-
-            if (!noResults || (nextCursor && nextCursor !== reqCursor)) {
-              this.cursorHistory.update(h => [...h, reqCursor]);
-            }
-          }
-
-          if (!nextCursor || noResults || (reqCursor && nextCursor === reqCursor)) {
-            this.isLastPage.set(true);
-          } else {
-            this.isLastPage.set(false);
-          }
-
-
-          this.lastRequestedCursor.set(null);
+          this.updateCursorState(resp);
         }),
         catchError((error) => {
           this.isLoadingNextPage.set(false);
@@ -101,6 +80,23 @@ export default class Landing {
     }
   });
 
+  private updateCursorState(resp: ImdbSearchResponse) {
+    const req = this.lastRequestedCursor();
+    const next = resp.nextCursorMark ?? null;
+    const hasResults = !!resp.results?.length;
+    // Si el cursor de la respuesta es diferente al solicitado y hay resultados, se añade al historial.
+    if (req && !this.cursorHistory().includes(req) && hasResults && next !== req) {
+      //Crea una copia del array agregando req al final.
+      this.cursorHistory.update(h => [...h, req]);
+    }
+    // Determina si se ha llegado al final de los resultados.
+    const reachedEnd = !hasResults || !next || next === req;
+    this.isLastPage.set(reachedEnd);
+    //
+    this.lastRequestedCursor.set(null);
+  }
+
+  // Inicia una nueva búsqueda con los parámetros indicados, reseteando el cursor y el historial de cursores.
   onSearch(params: ImdbSearchParams) {
     this.searchParams.update(
       p => ({ ...p, ...params, cursorMark: undefined })
@@ -108,6 +104,7 @@ export default class Landing {
     this.cursorHistory.set(['*']);
   }
 
+  // Cambia el orden de los resultados y resetea el cursor y el historial de cursores.
   onSortChange(event: { sortField: ImdbSortField; sortOrder: ImdbSortOrder }) {
     this.searchParams.update(p => ({
       ...p,
@@ -119,7 +116,7 @@ export default class Landing {
   }
 
 
-
+  // Carga la siguiente página de resultados si existe.
   loadNextPage() {
     const response = this.movieResource.value();
     const nextCursor = response?.nextCursorMark;
@@ -137,7 +134,7 @@ export default class Landing {
     this.isLoadingNextPage.set(true);
   }
 
-
+  // Navega a una página específica basada en el historial de cursores.
   goToPage(pageNumber: number) {
     const history = this.cursorHistory();
     const cursor = history[pageNumber - 1];

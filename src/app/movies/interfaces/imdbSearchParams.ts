@@ -1,5 +1,5 @@
 export type ImdbSortOrder = 'ASC' | 'DESC';
-export type ImdbSortField = 'id' | 'primaryTitle' | 'averageRating' | 'numVotes' | 'startYear';
+export type ImdbSortField = 'id' | 'averageRating' | 'startYear';
 export type ImdbType = 'movie' | 'tvSeries' | 'tvEpisode' | 'short' | 'video';
 export type ImdbGenre =
   | 'Action'
